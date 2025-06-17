@@ -59,3 +59,49 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+Concept for PAM Logistics & Delivery
+Headers
+● Order number- IDs unique to every customer
+● Customer Details- name & phone contact
+● Product- name of product
+● Operator- call centre personnel that handles assigned customers
+● Delivery date- Day customer is placing order
+● Location- Detailed directions from customer about location
+● City - The capital regions where customers location is found
+● Status- Final buyout of product whether delivered,postponed,cancelled or travelled
+● Rider- Particular delivery person/company assigned to product
+● Amount- Total amount paid for each product
+● Delivery fee- Amount charged for delivery
+ADS
+Mainly facebook ads,targeted audiences should be able to see the link and be redirected to our
+main page/ use the link directly to the page where the detailed write up shows to place their
+order.
+Ads(-image/video) These images and videos will be detailed and persuasive to not only get
+customers attention but to also close a purchase, phrases like ;free delivery, discounted when
+you get more than 1 is inculcated in the ads
+For products that are supplements, some ingredients and their uses can be listed,videos talking
+extensively about those products can also be uploaded to support videos and images of actual
+products.
+Product name,price ,weight and packaging style will be displayed
+Free delivery, upsell prices leading to discounts.
+CONCEPT
+Building a system where ads will be posted with SEOs to targeted audiences
+The uploads will be informative videos and pictures talking about the products,its uses
+as well.
+There's a link beneath the ad directing you to click to buy
+There’s more info about product on the page then the form to fill for your name and contact
+The link leads to a sheet with a part to fill for name,phone number,price of product and
+upsell details.
+These details must be easily accessible to the operator so he/she can do a follow up call
+to the customer.
+When an operator talks to a customer, the order status is confirmed. If the customer
+agrees for delivery to be made, (delivery is done the same day or next day) order will be
+dispatched to the delivery person. A one- time code will be sent to the customer to input
+after delivery is done.
+With instances where customers will be using a proxy a similar code will be shared with
+the proxy as well.
+VENDORS- Merchants whose products are being posted on the platform. The vendor’s name
+,email,phone contact, location and status will be needed as well.
+INVENTORY-Product quantity received from vendor
+Product quantity with delivery
