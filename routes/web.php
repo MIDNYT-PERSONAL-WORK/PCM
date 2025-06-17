@@ -7,7 +7,7 @@ Route::get('/', function () {
     return view('guest.welcome');
 });
 
-Route::view('auth','auth.LoginSignup')->name('LoginSignup');
+Route::view('auth','auth.login')->name('LoginSignup');
 
 Route::Post('login',[AuthController::class, 'login'])->name('login');
 Route::view('admin/orders', 'admin.order')->name('admin.order');

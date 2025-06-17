@@ -53,7 +53,7 @@
             </div>
 
             <!-- Role Selection - Desktop & Mobile -->
-            <div class="mb-8">
+            {{-- <div class="mb-8">
                 <h2 class="text-sm font-medium text-pam-gray mb-3">Login as:</h2>
                 <div class="hidden sm:flex border-b border-pam-gray-light pb-1" role="tablist">
                     <button 
@@ -114,10 +114,11 @@
                     <option value="operator">Operator</option>
                     <option value="rider">Rider</option>
                 </select>
-            </div>
+            </div> --}}
 
             <!-- Login Form -->
-            <form class="space-y-6">
+            <form class="space-y-6" action="{{ route('login') }}" method="POST" >
+                @csrf
                 <div>
                     <label for="email" class="block text-sm font-medium text-pam-gray">Email address</label>
                     <div class="mt-1">
@@ -128,9 +129,29 @@
 
                 <div>
                     <label for="password" class="block text-sm font-medium text-pam-gray">Password</label>
-                    <div class="mt-1">
-                        <input id="password" name="password" type="password" autocomplete="current-password" required 
-                            class="w-full px-4 py-3 border border-pam-gray-light rounded-lg focus:ring-2 focus:ring-pam-blue-light focus:border-pam-blue-light outline-none transition">
+                    <div class="mt-1 relative">
+                        <input 
+                            id="password" 
+                            name="password" 
+                            type="password" 
+                            autocomplete="current-password" 
+                            required 
+                            class="w-full px-4 py-3 border border-pam-gray-light rounded-lg focus:ring-2 focus:ring-pam-blue-light focus:border-pam-blue-light outline-none transition pr-12"
+                        >
+                        <button 
+                            type="button" 
+                            tabindex="-1"
+                            id="togglePassword"
+                            class="absolute inset-y-0 right-0 flex items-center px-3 text-pam-gray hover:text-pam-blue-light focus:outline-none"
+                        >
+                            <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            <svg id="eyeOffIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.956 9.956 0 012.293-3.95m3.25-2.568A9.956 9.956 0 0112 5c4.478 0 8.268 2.943 9.542 7a9.965 9.965 0 01-4.293 5.032M15 12a3 3 0 11-6 0 3 3 0 016 0zm6 6L6 6" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
 
@@ -149,7 +170,7 @@
                 <div>
                     <button type="submit" 
                         class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-pam-blue hover:bg-pam-blue-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pam-blue-light transition">
-                        Sign in as <span class="capitalize ml-1" x-text="activeRole"></span>
+                        Sign in
                     </button>
                 </div>
             </form>
@@ -178,15 +199,15 @@
                 
                 <!-- Role-specific benefits -->
                 <div class="mt-8 space-y-4">
-                    <div x-show="activeRole === 'admin'" class="p-4 bg-white/10 rounded-lg backdrop-blur-sm">
+                    {{-- <div x-show="activeRole === 'rider'" class="p-4 bg-white/10 rounded-lg backdrop-blur-sm">
                         <h3 class="font-medium mb-1">Admin Dashboard</h3>
                         <p class="text-sm opacity-80">Full system control and analytics</p>
-                    </div>
-                    <div x-show="activeRole === 'vendor'" class="p-4 bg-white/10 rounded-lg backdrop-blur-sm">
+                    </div> --}}
+                    <div x-show="activeRole === 'rider'" class="p-4 bg-white/10 rounded-lg backdrop-blur-sm">
                         <h3 class="font-medium mb-1">Vendor Portal</h3>
                         <p class="text-sm opacity-80">Manage your shipments and track deliveries</p>
                     </div>
-                    <div x-show="activeRole === 'operator'" class="p-4 bg-white/10 rounded-lg backdrop-blur-sm">
+                    <div x-show="activeRole === 'rider'" class="p-4 bg-white/10 rounded-lg backdrop-blur-sm">
                         <h3 class="font-medium mb-1">Operations Center</h3>
                         <p class="text-sm opacity-80">Coordinate logistics and dispatch riders</p>
                     </div>
@@ -199,6 +220,23 @@
         </div>
     </div>
 
+    <!-- Alpine.js for interactivity -->
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+</body>
+</html>    <!-- Show/hide password JS -->
+    <script>
+        const passwordInput = document.getElementById('password');
+        const togglePassword = document.getElementById('togglePassword');
+        const eyeIcon = document.getElementById('eyeIcon');
+        const eyeOffIcon = document.getElementById('eyeOffIcon');
+
+        togglePassword.addEventListener('click', function () {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            eyeIcon.classList.toggle('hidden');
+            eyeOffIcon.classList.toggle('hidden');
+        });
+    </script>
     <!-- Alpine.js for interactivity -->
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </body>

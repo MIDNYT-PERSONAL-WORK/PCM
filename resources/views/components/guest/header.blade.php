@@ -44,8 +44,8 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <a href="#" class="text-pam-gray hover:text-pam-blue px-3 py-2 text-sm font-medium">Login</a>
-                    <a href="#" class="bg-pam-blue text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-pam-blue-light transition">Register</a>
+                    {{-- <a href="" class="text-pam-gray hover:text-pam-blue px-3 py-2 text-sm font-medium">Login</a> --}}
+                    <a href="{{route('LoginSignup')}}" class="bg-pam-blue text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-pam-blue-light transition">Login</a>
                 </div>
             </div>
         </div>
