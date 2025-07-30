@@ -22,5 +22,6 @@ class DatabaseSeeder extends Seeder
             'role' => 'admin', // Set the role to admin
             'phone' => '1234567890',
         ]);
+       
     }
 }

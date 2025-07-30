@@ -3,9 +3,11 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Log;
 use App\Models\Order;
 use App\Models\Vendor;
 use App\Models\Product;
+use App\Models\Documents;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -24,6 +26,10 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'phone',
+        'role',
+        'is_active',
+    
     ];
 
     /**
@@ -64,5 +70,44 @@ class User extends Authenticatable
     public function vendorProfile() {
         return $this->hasOne(Vendor::class);
     }
+
+    public function Log() {
+        return $this->hasMany(Log::class);
+    }
+
+
+    public function documents()
+    {
+        return $this->hasMany(Documents::class);
+    }
+
+    //  public function vendorProfile()
+    // {
+    //     return $this->hasOne(Vendor::class);
+    // }
+
+    public function vendorReviews()
+    {
+        return $this->hasMany(VendorReview::class, 'vendor_id');
+    }
+
+    public function vendorPayments()
+    {
+        return $this->hasMany(VendorPayment::class, 'vendor_id');
+    }
+
+    public function vendorPayouts()
+    {
+        return $this->hasMany(VendorPayout::class, 'vendor_id');
+    }
+
+    public function vendorNotifications()
+    {
+        return $this->hasMany(VendorNotification::class, 'vendor_id');
+    }
+
+    public function vendor() {
+    return $this->hasOne(Vendor::class);
+}
 
 }

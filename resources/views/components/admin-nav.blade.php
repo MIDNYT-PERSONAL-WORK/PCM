@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <script>
         tailwind.config = {
             theme: {
@@ -15,9 +16,10 @@
                         'pam-blue': '#1e3a8a',
                         'pam-blue-light': '#3b82f6',
                         'pam-green': '#10b981',
+                        'pam-red': '#ef4444',
+                        'pam-orange': '#f97316',
                         'pam-gray': '#6b7280',
                         'pam-gray-light': '#f3f4f6',
-                        'pam-red': '#ef4444',
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
@@ -84,6 +86,12 @@
                             </svg>
                             Dashboard
                         </a>
+                        <a href="{{route('admin.roles.page')}}" class="flex items-center px-2 py-3 text-sm font-medium rounded-md {{ request()->routeIs('admin.roles.page') ? 'bg-pam-blue text-white' : 'text-pam-gray hover:bg-pam-gray-light hover:text-pam-blue' }}">
+                            <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                            Roles
+                        </a>
                         <a href="{{route('admin.customer')}}" class="flex items-center px-2 py-3 text-sm font-medium rounded-md {{ request()->routeIs('admin.customer') ? 'bg-pam-blue text-white' : 'text-pam-gray hover:bg-pam-gray-light hover:text-pam-blue' }}">
                             <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -114,13 +122,13 @@
                             </svg>
                             Analytics
                         </a>
-                        <a href="#" class="flex items-center px-2 py-3 text-sm font-medium rounded-md text-pam-gray hover:bg-pam-gray-light hover:text-pam-blue">
+                        {{-- <a href="#" class="flex items-center px-2 py-3 text-sm font-medium rounded-md text-pam-gray hover:bg-pam-gray-light hover:text-pam-blue">
                             <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                             Settings
-                        </a>
+                        </a> --}}
                     </nav>
                 </div>
                 
@@ -244,10 +252,13 @@
                              role="menu"
                              aria-orientation="vertical"
                              style="display: none;">
-                            <a href="" class="block px-4 py-2 text-sm text-pam-gray hover:bg-pam-gray-light" role="menuitem">Profile</a>
-                            <form method="POST" action="" role="none">
+                            <a href="{{route('profile')}}" class="block px-4 py-2 text-sm text-pam-gray hover:bg-pam-gray-light" role="menuitem">Profile</a>
+                                   <a href="" class="block px-4 py-2 text-sm text-pam-gray hover:bg-pam-gray-light" role="menuitem">Settings</a>
+                            <form method="POST" action="{{ route('logout') }}" role="none">
                                 @csrf
-                                <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-pam-gray hover:bg-pam-gray-light" role="menuitem">Logout</button>
+                                <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-pam-gray hover:bg-pam-gray-light" role="menuitem">
+                                    Logout
+                                </button>
                             </form>
                         </div>
                     </div>
@@ -307,10 +318,10 @@
                                 <p class="text-xs text-pam-gray truncate">{{ auth()->user()->email }}</p>
                             </div>
                             <div class="border-t border-gray-100"></div>
-                            <a href="" class="block px-4 py-2 text-sm text-pam-gray hover:bg-pam-gray-light" role="menuitem">Profile</a>
+                            <a href="{{route('profile')}}" class="block px-4 py-2 text-sm text-pam-gray hover:bg-pam-gray-light" role="menuitem">Profile</a>
                             <a href="" class="block px-4 py-2 text-sm text-pam-gray hover:bg-pam-gray-light" role="menuitem">Settings</a>
                             <div class="border-t border-gray-100"></div>
-                            <form method="POST" action="" role="none">
+                            <form method="POST" action="{{ route('logout') }}" role="none">
                                 @csrf
                                 <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-pam-gray hover:bg-pam-gray-light" role="menuitem">Logout</button>
                             </form>

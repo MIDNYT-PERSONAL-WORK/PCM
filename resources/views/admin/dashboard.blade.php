@@ -17,6 +17,8 @@
                         'pam-blue-light': '#3b82f6',
                         'pam-green': '#10b981',
                         'pam-gray': '#6b7280',
+                        'pam-red': '#ef4444',
+                        'pam-orange': '#f97316',
                         'pam-gray-light': '#f3f4f6',
                     },
                     fontFamily: {
@@ -31,6 +33,27 @@
    
          
             <div class="flex-1 overflow-y-auto p-4 md:p-6">
+                 @if (session('error'))
+                    <div class="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded p-3 flex items-center justify-between">
+                        <span>{{ session('error') }}</span>
+                        <button type="button" class="ml-4 text-red-400 hover:text-red-600 focus:outline-none" onclick="this.parentElement.style.display='none'">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                @endif
+
+                @if (session('success'))
+                    <div class="mb-4 text-sm text-green-700 bg-green-50 border border-green-200 rounded p-3 flex items-center justify-between">
+                        <span>{{ session('success') }}</span>
+                        <button type="button" class="ml-4 text-green-400 hover:text-green-600 focus:outline-none" onclick="this.parentElement.style.display='none'">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                @endif
                 <!-- Stats Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     <div class="bg-white p-4 rounded-lg shadow-sm border border-pam-gray-light">

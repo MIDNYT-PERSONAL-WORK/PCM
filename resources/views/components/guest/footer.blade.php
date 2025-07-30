@@ -3,10 +3,10 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div>
                     <h3 class="text-lg font-semibold text-pam-blue mb-4">PAM Logistics</h3>
-                    <p class="text-pam-gray text-sm">Your trusted partner for medical equipment logistics and supply chain solutions across Nigeria.</p>
+                    <p class="text-pam-gray text-sm">Your trusted partner for medical equipment logistics and supply chain solutions across Ghana.</p>
                     <div class="mt-4 flex items-center">
                         <i class="fas fa-phone-alt text-pam-gray mr-2"></i>
-                        <span class="text-pam-gray text-sm">+234 800 123 4567</span>
+                        <span class="text-pam-gray text-sm">+233 000 000 0000</span>
                     </div>
                     <div class="mt-1 flex items-center">
                         <i class="fas fa-envelope text-pam-gray mr-2"></i>

@@ -39,7 +39,9 @@
         <!-- Form Section -->
         <div class="w-full lg:w-1/2 p-8 md:p-12 lg:p-20 flex flex-col justify-center">
             <!-- Logo -->
-            <div class="mb-6 text-center lg:text-left">
+            
+            <a href="{{ route('welcome') }}">
+                   <div class="mb-6 text-center lg:text-left">
                 <div class="flex items-center justify-center lg:justify-start">
                     <div class="w-12 h-12 rounded-lg bg-pam-blue flex items-center justify-center mr-3">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -51,6 +53,8 @@
                 </div>
                 <p class="mt-2 text-pam-gray">Efficient delivery management system</p>
             </div>
+            </a>
+         
 
             <!-- Role Selection - Desktop & Mobile -->
             {{-- <div class="mb-8">
@@ -119,6 +123,27 @@
             <!-- Login Form -->
             <form class="space-y-6" action="{{ route('login') }}" method="POST" >
                 @csrf
+                @if (session('error'))
+                    <div class="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded p-3 flex items-center justify-between">
+                        <span>{{ session('error') }}</span>
+                        <button type="button" class="ml-4 text-red-400 hover:text-red-600 focus:outline-none" onclick="this.parentElement.style.display='none'">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                @endif
+
+                @if (session('success'))
+                    <div class="mb-4 text-sm text-green-700 bg-green-50 border border-green-200 rounded p-3 flex items-center justify-between">
+                        <span>{{ session('success') }}</span>
+                        <button type="button" class="ml-4 text-green-400 hover:text-green-600 focus:outline-none" onclick="this.parentElement.style.display='none'">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                @endif
                 <div>
                     <label for="email" class="block text-sm font-medium text-pam-gray">Email address</label>
                     <div class="mt-1">

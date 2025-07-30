@@ -23,6 +23,7 @@ return new class extends Migration
             $table->text('location');
             $table->string('city');
             $table->enum('source', ['facebook', 'website', 'manual'])->default('website');
+            $table->enum('payment_mode', ['credit_card', 'debit_card', 'cash_on_delivery', 'bank_transfer', 'momo'])->default('cash_on_delivery');
             $table->enum('status', ['pending', 'confirmed', 'delivered', 'postponed', 'cancelled', 'travelled'])->default('pending');
             $table->foreignId('operator_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('rider_id')->nullable()->constrained('users')->nullOnDelete();

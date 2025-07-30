@@ -42,7 +42,8 @@
         <!-- Form Section -->
         <div class="w-full lg:w-1/2 p-8 md:p-12 lg:p-20 flex flex-col justify-center">
             <!-- Logo -->
-            <div class="mb-6 text-center lg:text-left">
+            <a href="{{ url('/') }}">
+                <div class="mb-6 text-center lg:text-left">
                 <div class="flex items-center justify-center lg:justify-start">
                     <div class="w-12 h-12 rounded-lg bg-pam-blue flex items-center justify-center mr-3">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -54,6 +55,8 @@
                 </div>
                 <p class="mt-2 text-pam-gray">Efficient delivery management system</p>
             </div>
+            </a>
+            
 
             <!-- Auth Switcher -->
             <div class="flex bg-pam-gray-light rounded-lg p-1 mb-6 auth-switcher">

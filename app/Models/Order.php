@@ -9,8 +9,33 @@ use Illuminate\Database\Eloquent\Model;
 class Order extends Model
 {
     //
+    protected $fillable = [
+       'order_number',
+        'customer_name',
+        'phone',
+        'product_id',
+        'quantity',
+        'amount',
+        'delivery_fee',
+        'location',
+        'city',
+        'source',
+        'payment_mode',
+        'status',
+        'operator_id',
+        'rider_id',
+        'delivery_code'
+    ];
+
+
+
     public function product() {
-    return $this->belongsTo(Product::class);
+        return $this->belongsTo(Product::class);
+    }
+
+     public function items()
+    {
+        return $this->hasMany(DraftOrderItem::class);
     }
 
     public function operator() {
