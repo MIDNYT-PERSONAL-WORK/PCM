@@ -8,25 +8,7 @@
     @vite(['resources/css/app.css','resources/js/app.js'])
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'pam-blue': '#1e3a8a',
-                        'pam-blue-light': '#3b82f6',
-                        'pam-green': '#10b981',
-                        'pam-red': '#ef4444',
-                        'pam-gray': '#6b7280',
-                        'pam-gray-light': '#f3f4f6',
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                }
-            }
-        }
-    </script>
+     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="font-sans bg-pam-gray-light">
     <!-- Navigation -->

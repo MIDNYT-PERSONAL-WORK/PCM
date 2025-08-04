@@ -68,7 +68,7 @@ class User extends Authenticatable
     }
 
     public function vendorProfile() {
-        return $this->hasOne(Vendor::class);
+        return $this->hasOne(Vendor::class, 'vendor_id');
     }
 
     public function Log() {

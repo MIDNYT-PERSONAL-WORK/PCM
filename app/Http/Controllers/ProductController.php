@@ -15,7 +15,7 @@ class ProductController extends Controller
     
     $product = Product::with([ 'vendor'])->findOrFail($id);
     $venderDetails=User::where('id', $product->vendor_id)->first();
-    // dd($product);
+   // dd($product , $venderDetails);
     $relatedProducts = Product::where('category_id', $product->category_id)
                             ->where('id', '!=', $product->id)
                             ->limit(4)

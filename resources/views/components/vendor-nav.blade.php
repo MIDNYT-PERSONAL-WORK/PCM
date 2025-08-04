@@ -4,34 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vendor | PAM Logistics</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'pam-blue': '#1e3a8a',
-                        'pam-blue-light': '#3b82f6',
-                        'pam-green': '#10b981',
-                        'pam-red': '#ef4444',
-                        'pam-orange': '#f97316',
-                        'pam-gray': '#6b7280',
-                        'pam-gray-light': '#f3f4f6',
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    transitionProperty: {
-                        'height': 'height',
-                        'spacing': 'margin, padding',
-                    },
-                }
-            }
-        }
-    </script>
+       @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         [x-cloak] { display: none !important; }
         

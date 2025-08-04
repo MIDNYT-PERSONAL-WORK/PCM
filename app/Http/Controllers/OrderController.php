@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Order;
+use App\Models\Inventory;
 use App\Models\DraftOrder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -47,20 +48,23 @@ class OrderController extends Controller
     
     public function confirmOrder(Order $order)
 {
-    $order->update(['status' => 'delivered']);
+    $order->update(['status' => 'confirmed']);
 
     $customerPhone = $order->phone;
-    //send things order  with price and delivery code
     $deliveryCode = $order->delivery_code;
-    //list of things bought
-    $items = $order->product->pluck('name')->toArray();
-    // dd($items);
-    $items = implode(', ', $items);
-    $message = "Your order has been confirmed! Items: {$items}. Total: GHC{$order->amount}. Delivery Code: {$deliveryCode}";
-   
-    
-    
 
+    // Using eager loaded relationship with proper chaining
+    $items = $order->orderItems->map(function($orderItem) {
+        return $orderItem->product->name ?? 'Unknown Product';
+    })->implode(', ');
+
+    // OR using pluck() with proper relationship nesting
+    $items = $order->orderItems->pluck('product.name')->filter()->implode(', ');
+    //dd($items);    
+    // Generate tracking URL
+    $trackingUrl = route('tracking.show', ['order' => $order->id, 'code' => $deliveryCode]);
+    
+    $message = "Your order has been confirmed! Items: {$items}. Total: GHC{$order->amount}. Delivery Code: {$deliveryCode}. Track your delivery: {$trackingUrl}";
 
     $smsSent = $this->sendDeliveryNotification($customerPhone, $message);
 
@@ -109,40 +113,85 @@ protected function sendDeliveryNotification($phone, $message)
 
 
     public function confirm(DraftOrder $draft)
-    {
-       // dd($draft, request('rider_id'));
-       $draft->load(['items.product.vendor', 'rider']);
+{
+    DB::beginTransaction(); // Start transaction for data consistency
+
+    try {
+        $draft->load(['items.product.vendor', 'rider']);
+        
         $draft->update([
             'status' => 'processing',
-            'rider_id' => request('rider_id'), // Assuming rider_id is passed in the request
-            
+            'rider_id' => request('rider_id'),
         ]);
-        //dd($draft);
-        //create a delivery code
 
-        //move to order
+        // Calculate totals
+        $subtotal = $draft->items->sum('amount');
+        $deliveryFee = $draft->items->first()->delivery_fee ?? request('delivery_fee');
+        $totalAmount = $subtotal + $deliveryFee;
+        //dd($subtotal, $deliveryFee, $totalAmount);                              
+        // Create the order
         $order = Order::create([
             'order_number' => 'ORD-' . strtoupper(uniqid()),
             'customer_name' => $draft->customer_name,
             'phone' => $draft->phone,
-            'product_id' => $draft->items->first()->product_id,
-            'quantity' => $draft->items->sum('quantity'),
-            'amount' => $draft->items->sum('amount') + $draft->amount,
-            'delivery_fee' => $draft->items->first()->delivery_fee,
             'location' => $draft->location,
-            'city' => $draft->location,
-            //'source' => $draft->source,
-            //'payment_mode' => $draft->payment_mode,
+            'city' => $draft->city,
+            'subtotal' => $subtotal,
+            'delivery_fee' => $deliveryFee,
+            'amount' => $totalAmount,
             'status' => 'confirmed',
-            'operator_id' => $draft->user_id,
+            'operator_id' => auth()->user()->id,
             'rider_id' => $draft->rider_id,
-            'delivery_code' =>  'DEL-' . strtoupper(uniqid()),
+            'delivery_code' => 'DEL-' . strtoupper(uniqid()),
         ]);
-        $order->save();
-        // Additional confirmation logic
-        
+
+        // Process each item
+        foreach ($draft->items as $draftItem) {
+            // Create order item
+            $order->OrderItems()->create([
+                'product_id' => $draftItem->product_id,
+                'quantity' => $draftItem->quantity,
+                'price' => $draftItem->price,
+                'amount' => $draftItem->amount,
+            ]);
+
+            // Deduct from product stock
+            $product = $draftItem->product;
+            $newStock = $product->stock - $draftItem->quantity;
+            
+            if ($newStock < 0) {
+                throw new \Exception("Insufficient stock for product: {$product->name}");
+            }
+
+            $product->update(['stock' => $newStock]);
+
+            // Deduct from inventory
+            $inventory = Inventory::where('product_id', $product->id)
+                ->where('vendor_id', $product->vendor_id)
+                ->first();
+
+            if ($inventory) {
+                $newAvailable = $inventory->quantity_available - $draftItem->quantity;
+                
+                if ($newAvailable < 0) {
+                    throw new \Exception("Insufficient inventory for product: {$product->name}");
+                }
+
+                $inventory->update([
+                    'quantity_available' => $newAvailable,
+                    'status' => ($newAvailable > 0) ? 'in_stock' : 'out_of_stock'
+                ]);
+            }
+        }
+
+        DB::commit(); // Commit all changes if everything succeeds
         return back()->with('success', 'Order confirmed successfully');
+
+    } catch (\Exception $e) {
+        DB::rollBack(); // Rollback all changes if any error occurs
+        return back()->with('error', 'Order confirmation failed: ' . $e->getMessage());
     }
+}
 
     public function save(DraftOrder $draft)
     {
@@ -191,11 +240,16 @@ protected function sendDeliveryNotification($phone, $message)
         ->first()
         ->avg_processing_hours;
         //will 
-        $AllOrders = Order::with(['product.vendor', 'operator'])
+        $vendorName=user::
+            where('id', auth()->user()->id)
+            ->pluck('name')
+            ->first();
+        //dd($vendorName);
+        $AllOrders = Order::with(['vendor', 'operator','OrderItems'])
             ->paginate(10);
         //dd($AllOrders);
         // Calculate average hours orders remain in 'draft' status
-        return view('operator.order', compact('TotalOrders', 'totalToday', 'olderThan3Days', 'avgProcessingTime', 'AllOrders'));
+        return view('operator.order', compact('TotalOrders', 'totalToday', 'olderThan3Days', 'avgProcessingTime', 'AllOrders', 'vendorName'));
     }
 
     // In DraftController.php

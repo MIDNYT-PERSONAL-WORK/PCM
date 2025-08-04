@@ -188,17 +188,18 @@
                                         <span class="text-xs text-black">{{ $order->phone }}</span>
                                     </td>
                                      <td class="px-6 py-4 whitespace-nowrap text-sm text-pam-gray">
-                                        @if($order->product)
-                                            {{ $order->product->vendor->name ?? 'N/A' }}
-                                        @else
-                                            N/A
-                                        @endif
+                                        
+                                            {{ $vendorName ?? 'N/A' }}
+                                       
                                     </td>
                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-pam-gray">
-
-                                            {{ $order->product->name }} ({{ $order->quantity }})<br>
-
+                                    @foreach($order->OrderItems as $item)
+                                        {{ $item->product->name }} ({{ $item->quantity }})<br>
+                                    @endforeach
                                     </td>
+                                        
+
+                                    
                                      <td class="px-6 py-4 whitespace-nowrap text-sm text-pam-gray">
                                         GHC{{ number_format($order->sum('amount'), 2) }}
                                     </td>

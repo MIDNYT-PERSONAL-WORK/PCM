@@ -1,15 +1,68 @@
 <?php
 
+use Illuminate\Http\Request;
+use App\Events\RiderLocationUpdated;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\RiderController;
 use App\Http\Controllers\RolesController;
 use App\Http\Controllers\VendorController;
-
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\InventoryController;
-use App\Http\Controllers\OrderController;
+
+
+
+
+
+
+
+
+
+Route::get('/rider/dashboard', [RiderController::class, 'dashboard'])->name('rider.dashboard');
+Route::get('/rider/delivery', [RiderController::class, 'delivery'])->name('rider.delivery');
+Route::get('/rider/payment', [RiderController::class, 'payment'])->name('rider.payment');
+Route::get('/rider/performance', [RiderController::class, 'performance'])->name('rider.performance');
+Route::post('/rider/status', [RiderController::class, 'status'])->name('rider.status');
+// routes/web.php
+Route::get('/tracking/{order}/{code}', [TrackingController::class, 'show'])
+    ->name('tracking.show');
+
+// routes/api.php
+Route::post('/rider/location', function (Request $request) {
+    $request->validate([
+        'order_id' => 'required|exists:orders,id',
+        'latitude' => 'required|numeric',
+        'longitude' => 'required|numeric'
+    ]);
+
+    // Update rider's location
+    auth()->user()->update([
+        'latitude' => $request->latitude,
+        'longitude' => $request->longitude
+    ]);
+
+    // Broadcast update
+    event(new RiderLocationUpdated(
+        $request->order_id,
+        $request->latitude,
+        $request->longitude
+    ));
+
+    return response()->json(['success' => true]);
+});
+
+
+
+
+
+
+
+
 
 
 Route::get('/test-sms', [OrderController::class, 'testMNotifyConnection']);
@@ -17,7 +70,7 @@ Route::get('/test-sms', [OrderController::class, 'testMNotifyConnection']);
 
 Route::get('/', [AuthController::class, 'welcome'])->name('welcome');
 Route::view('auth','auth.login')->name('LoginSignup');
-Route::get('/products/{id}', [ProductController::class, 'show'])->name('product.show');
+Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
 
 Route::post('/checkout', [BookingController::class, 'store'])->name('checkout.store');
 Route::get('/checkout/success/{id}', [BookingController::class, 'success'])->name('checkout.success');
@@ -80,7 +133,7 @@ Route::get('vendor/dashboard', [VendorController::class,'Dashboard'])->name('ven
 Route::get('vendor/products', [VendorController::class, 'product'])->name('vendor.products');
 Route::view('vendor/payments', 'vendors.payment')->name('vendor.payments');
 Route::view('operator/dashboard', 'operator.dashboard')->name('operator.dashboard');
-Route::view('rider/dashboard', 'rider.dashboard')->name('rider.dashboard');
+
 Route::view('auth/document', 'auth.document')->name('auth.document');
 
 

@@ -252,39 +252,42 @@
                             </div>
                             
                             <!-- Rider Information -->
-                            @if($draft->rider)
-                            <div class="bg-white p-4 rounded-lg shadow-sm border border-pam-gray-light">
-                                <h3 class="text-lg font-medium text-pam-gray mb-4">Rider Information</h3>
-                                <div class="flex items-start space-x-4">
-                                    <div class="flex-shrink-0">
+                           @if($draft->rider)
+                            <div class="bg-white p-3 sm:p-4 rounded-lg shadow-sm border border-pam-gray-light">
+                                <h3 class="text-base sm:text-lg font-medium text-pam-gray mb-3 sm:mb-4">Rider Information</h3>
+                                <div class="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
+                                    <div class="flex items-center sm:items-start gap-3 sm:flex-col sm:gap-2 sm:flex-shrink-0">
                                         <div class="h-10 w-10 rounded-full bg-pam-blue-light flex items-center justify-center text-white font-medium">
                                             {{ substr($draft->rider->name, 0, 1) }}
                                         </div>
+                                        <div class="sm:text-center">
+                                            <h4 class="text-sm font-medium text-pam-blue">{{ $draft->rider->name }}</h4>
+                                            <p class="text-xs text-pam-gray mt-1">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium 
+                                                    @if($draft->rider->is_active) bg-green-100 text-green-800
+                                                    @else bg-gray-100 text-gray-800 @endif">
+                                                    @if($draft->rider->is_active)
+                                                        Active
+                                                    @else
+                                                        Inactive
+                                                    @endif
+                                                </span>
+                                            </p>
+                                        </div>
                                     </div>
+                                    
                                     <div class="flex-1">
-                                        <h4 class="text-sm font-medium text-pam-blue">{{ $draft->rider->name }}</h4>
-                                        <p class="text-xs text-pam-gray mt-1">
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium 
-                                                @if($draft->rider->is_active) bg-green-100 text-green-800
-                                                @else bg-gray-100 text-gray-800 @endif">
-                                                @if($draft->rider->is_active)
-                                                    Active
-                                                @else
-                                                    Inactive
-                                                @endif
-                                            </span>
-                                        </p>
-                                        <div class="mt-2 grid grid-cols-2 gap-2 text-xs">
+                                        <div class="grid grid-cols-1 xs:grid-cols-2 gap-2 text-xs">
                                             <div>
                                                 <p class="text-pam-gray">Phone</p>
                                                 <p class="text-pam-blue">{{ $draft->rider->phone ?? 'N/A' }}</p>
                                             </div>
                                             <div>
                                                 <p class="text-pam-gray">Email</p>
-                                                <p class="text-pam-blue">{{ $draft->rider->email }}</p>
+                                                <p class="text-pam-blue break-all">{{ $draft->rider->email }}</p>
                                             </div>
                                         </div>
-                                        <div class="mt-3 flex space-x-2">
+                                        <div class="mt-3 flex flex-wrap gap-2">
                                             @if($draft->rider->phone)
                                             <a href="tel:{{ $draft->rider->phone }}" class="text-xs text-pam-blue-light hover:text-pam-blue flex items-center">
                                                 <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">

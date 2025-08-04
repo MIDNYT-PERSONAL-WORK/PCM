@@ -49,6 +49,7 @@ class DraftOrder extends Model
         return $this->hasOne(Order::class);
     }
 
+   //only pick one amount for the order
     public function calculateTotal()
     {
         return $this->items->sum('amount');
