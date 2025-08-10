@@ -7,8 +7,33 @@
   
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-       @vite(['resources/css/app.css', 'resources/js/app.js'])
+   
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+     <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'pam-blue': '#1e3a8a',
+                        'pam-blue-light': '#3b82f6',
+                        'pam-green': '#10b981',
+                        'pam-red': '#ef4444',
+                        'pam-orange': '#f97316',
+                        'pam-gray': '#6b7280',
+                        'pam-gray-light': '#f3f4f6',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    transitionProperty: {
+                        'height': 'height',
+                        'spacing': 'margin, padding',
+                    },
+                }
+            }
+        }
+    </script> 
     <style>
         [x-cloak] { display: none !important; }
         
@@ -82,9 +107,9 @@
                             </svg>
                             Products
                         </a>
-                        <a href="#" 
+                        <a href="{{route('vendor.analytic')}}" 
                         class="flex items-center px-2 py-3 text-sm font-medium rounded-md 
-                                {{ request()->routeIs('vendor.analytics') ? 'bg-pam-blue-light text-white' : 'text-pam-gray hover:bg-pam-gray-light hover:text-pam-blue' }}">
+                                {{ request()->routeIs('vendor.analytic') ? 'bg-pam-blue-light text-white' : 'text-pam-gray hover:bg-pam-gray-light hover:text-pam-blue' }}">
                             <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                             </svg>

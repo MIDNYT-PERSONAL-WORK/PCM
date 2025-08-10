@@ -8,4 +8,4 @@ window.Echo = new Echo({
     wsPort: import.meta.env.VITE_REVERB_PORT || 8080,
     forceTLS: false,
 });
-console.log('Echo initialized:', window.Echo);
+// console.log('Echo initialized:', window.Echo);

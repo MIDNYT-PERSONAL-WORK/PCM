@@ -31,7 +31,10 @@ Route::post('/rider/status', [RiderController::class, 'status'])->name('rider.st
 // routes/web.php
 Route::get('/tracking/{order}/{code}', [TrackingController::class, 'show'])
     ->name('tracking.show');
-
+Route::get('/vendor/dashboard/revenue-data', [VendorController::class, 'getRevenueData']); 
+Route::get('/vendor/orders/{order}', [VendorController::class, 'show'])->name('vendor.orders.show');
+Route::get('/vendor/analysic', [VendorController::class, 'analysic'])->name('vendor.analytic');
+Route::get('/vendor/dashboard/chart-data', [VendorController::class, 'getChartData']);
 // routes/api.php
 Route::post('/rider/location', function (Request $request) {
     $request->validate([
@@ -127,9 +130,9 @@ Route::get('vendor/dashboard', [VendorController::class,'Dashboard'])->name('ven
     Route::put('/inventory/{inventory}', [InventoryController::class, 'update'])->name('inventory.update');
     Route::delete('/inventory/{inventory}', [InventoryController::class, 'destroy'])->name('inventory.destroy');  
     
-
-  Route::view('vendor/orders', 'vendors.order')->name('vendor.orders');
-
+Route::get('/orders/{order}', [OrderController::class, 'show'])->name('vendor.orders.show');
+    Route::put('/orders/{order}', [OrderController::class, 'update'])->name('vendor.orders.update');
+Route::get('vendor/orders', [VendorController::class, 'VendorOrder'])->name('vendor.orders');
 Route::get('vendor/products', [VendorController::class, 'product'])->name('vendor.products');
 Route::view('vendor/payments', 'vendors.payment')->name('vendor.payments');
 Route::view('operator/dashboard', 'operator.dashboard')->name('operator.dashboard');

@@ -27,9 +27,10 @@ class User extends Authenticatable
         'email',
         'password',
         'phone',
+        'latitude',
+        'longitude',
         'role',
         'is_active',
-    
     ];
 
     /**
@@ -109,5 +110,18 @@ class User extends Authenticatable
     public function vendor() {
     return $this->hasOne(Vendor::class);
 }
+public function hasCurrentOrder()
+{
+    return $this->currentOrder()->exists();
+}
+
+public function getCurrentOrder()
+{
+    return $this->currentOrder()
+              ->with(['orderItems.product.vendor'])
+              ->first();
+}
+
+    
 
 }

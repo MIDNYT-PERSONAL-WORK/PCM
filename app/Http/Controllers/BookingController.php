@@ -143,6 +143,7 @@ protected function sendOrderConfirmation(DraftOrder $order)
         // Load the items with product information
         $draftOrder->load('items.product');
         
+        
         return view('checkout.success', compact('draftOrder'));
     }
 }

@@ -13,5 +13,5 @@ window.Echo = new Echo({
     enabledTransports: ['ws', 'wss'],
 });
 
-console.log('Echo initialized:', window.Echo);
+// console.log('Echo initialized:', window.Echo);
 

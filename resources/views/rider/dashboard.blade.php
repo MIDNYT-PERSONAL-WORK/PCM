@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Delivery Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
@@ -398,32 +399,58 @@
     <!-- Leaflet JS and Routing Plugin -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+    <!-- Laravel Echo and Pusher -->
+    <script src="{{ asset('js/app.js') }}"></script>
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Status toggle functionality
             const toggleSwitch = document.getElementById('toggle-switch');
             const toggleCircle = document.getElementById('toggle-circle');
             const statusText = document.getElementById('status-text');
             const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-            
-            // Check if online status is stored in localStorage
+            let riderMarker = null;
+            let map = null;
+            let watchPositionId = null;
+
+            // Check initial status from localStorage
             const isOnline = localStorage.getItem('riderStatus') === 'online';
-            
-            // Set initial state
             if (isOnline) {
                 setOnlineStatus(true);
+                startLocationUpdates();
             }
-            
-            // Toggle functionality
+
             toggleSwitch.addEventListener('click', function() {
                 const isActive = toggleSwitch.classList.contains('bg-blue-600');
                 const newStatus = !isActive;
-                
-                setOnlineStatus(newStatus);
-                updateRiderStatus(newStatus);
+
+                if (newStatus) {
+                    // Going online - get current position first
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                            (position) => {
+                                const { latitude, longitude } = position.coords;
+                                console.log('Current position obtained:', { latitude, longitude });
+                                updateRiderStatus(true, latitude, longitude);
+                                startLocationUpdates();
+                            },
+                            (error) => {
+                                console.error('Geolocation error:', error);
+                                alert('Please allow location access to go online.');
+                                setOnlineStatus(false);
+                            },
+                            { enableHighAccuracy: true, timeout: 10000 }
+                        );
+                    } else {
+                        alert('Geolocation is not supported by your browser.');
+                        setOnlineStatus(false);
+                    }
+                } else {
+                    // Going offline
+                    stopLocationUpdates();
+                    updateRiderStatus(false);
+                }
             });
-            
+
             function setOnlineStatus(isOnline) {
                 if (isOnline) {
                     toggleSwitch.classList.remove('bg-gray-200');
@@ -441,8 +468,66 @@
                     localStorage.setItem('riderStatus', 'offline');
                 }
             }
-            
-            function updateRiderStatus(isOnline) {
+
+            function startLocationUpdates() {
+                if (watchPositionId) return; // Already running
+                
+                console.log('Starting location updates...');
+                
+                watchPositionId = navigator.geolocation.watchPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        const timestamp = new Date(position.timestamp).toISOString();
+                        
+                        console.log('Location update:', { 
+                            latitude, 
+                            longitude,
+                            accuracy: position.coords.accuracy,
+                            timestamp 
+                        });
+                        
+                        // Update rider marker on map if exists
+                        if (riderMarker) {
+                            riderMarker.setLatLng([latitude, longitude]);
+                            riderMarker.bindPopup(`Your Location (updated: ${timestamp})`).openPopup();
+                        }
+                        
+                        // Send update to server
+                        updateRiderStatus(true, latitude, longitude);
+                    },
+                    (error) => {
+                        console.error('Watch position error:', error);
+                        alert('Location tracking failed. Please check your location settings.');
+                        setOnlineStatus(false);
+                    },
+                    { 
+                        enableHighAccuracy: true, 
+                        timeout: 10000,
+                        maximumAge: 0 
+                    }
+                );
+            }
+
+            function stopLocationUpdates() {
+                if (watchPositionId) {
+                    navigator.geolocation.clearWatch(watchPositionId);
+                    watchPositionId = null;
+                    console.log('Stopped location updates');
+                }
+            }
+
+            function updateRiderStatus(isOnline, latitude = null, longitude = null) {
+                const payload = {
+                    status: isOnline ? 'online' : 'offline'
+                };
+
+                if (isOnline && latitude && longitude) {
+                    payload.latitude = latitude;
+                    payload.longitude = longitude;
+                }
+
+                console.log('Sending status update:', payload);
+
                 fetch('/rider/status', {
                     method: 'POST',
                     headers: {
@@ -450,33 +535,33 @@
                         'X-CSRF-TOKEN': csrfToken,
                         'Accept': 'application/json'
                     },
-                    body: JSON.stringify({
-                        status: isOnline ? 'online' : 'offline'
-                    })
+                    body: JSON.stringify(payload)
                 })
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error('Network response was not ok');
+                        throw new Error(`HTTP error! status: ${response.status}`);
                     }
                     return response.json();
                 })
                 .then(data => {
-                    console.log('Status updated:', data);
-                    // Update UI based on server response
+                    console.log('Status update response:', data);
                     setOnlineStatus(data.status === 'online');
+                    
+                    if (data.status === 'online' && data.latitude && data.longitude) {
+                        console.log('Server confirmed online status with location:', {
+                            latitude: data.latitude,
+                            longitude: data.longitude
+                        });
+                    }
                 })
                 .catch(error => {
                     console.error('Error updating status:', error);
-                    // Revert UI if API call fails
                     const currentStatus = localStorage.getItem('riderStatus');
                     setOnlineStatus(currentStatus === 'online');
-                    
-                    // Show error message to user
                     alert('Failed to update status. Please try again.');
                 });
             }
 
-            // Initialize the map if delivery exists
             @if(isset($deliveries) && $deliveries->isNotEmpty())
             initMap();
             @endif
@@ -484,31 +569,24 @@
             function initMap() {
                 const mapElement = document.getElementById('delivery-map');
                 const loadingElement = document.getElementById('map-loading');
-                
                 if (!mapElement) return;
-                
-                // Default coordinates (Accra, Ghana)
-                const defaultLocation = [5.5600, -0.2057];
-                
-                // Initialize the map
-                const map = L.map('delivery-map').setView(defaultLocation, 13);
-                
-                // Add OpenStreetMap tiles
+
+                const defaultLocation = [5.5600, -0.2057]; // Default location if geolocation fails
+                map = L.map('delivery-map').setView(defaultLocation, 13);
+
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 }).addTo(map);
-                
-                // Try to get the user's current location
+
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(
                         (position) => {
                             const userLocation = [position.coords.latitude, position.coords.longitude];
-                            
-                            // Center map on user's location
+                            console.log('Initial user location:', userLocation);
                             map.setView(userLocation, 15);
-                            
-                            // Add marker for rider's current location
-                            const riderMarker = L.marker(userLocation, {
+
+                            // Create rider marker
+                            riderMarker = L.marker(userLocation, {
                                 icon: L.divIcon({
                                     className: 'rider-marker',
                                     html: `<div style="background-color: #3B82F6; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white;"></div>`,
@@ -517,14 +595,17 @@
                                 })
                             }).addTo(map);
                             riderMarker.bindPopup("Your Location").openPopup();
-                            
-                            // Add delivery destination (this would come from your backend in a real app)
-                            // For demo, we'll create a destination 5km away
-                            const destination = L.latLng(
-                                userLocation[0] + 0.045, 
-                                userLocation[1] + 0.045
-                            );
-                            
+
+                            // Set destination marker
+                            const delivery = @json($deliveries->first());
+                            let destination;
+                            if (delivery.latitude && delivery.longitude) {
+                                destination = L.latLng(delivery.latitude, delivery.longitude);
+                            } else {
+                                // Fallback if no coordinates - use a point near the rider
+                                destination = L.latLng(userLocation[0] + 0.045, userLocation[1] + 0.045);
+                            }
+
                             const destinationMarker = L.marker(destination, {
                                 icon: L.divIcon({
                                     className: 'destination-marker',
@@ -534,21 +615,21 @@
                                 })
                             }).addTo(map);
                             destinationMarker.bindPopup("Delivery Destination");
-                            
-                            // Add routing control
+
+                            // Create route between rider and destination
                             L.Routing.control({
                                 waypoints: [
                                     L.latLng(userLocation[0], userLocation[1]),
                                     destination
                                 ],
                                 routeWhileDragging: false,
-                                show: false, // Hide the instructions panel
+                                show: false,
                                 lineOptions: {
                                     styles: [{color: '#3B82F6', opacity: 0.7, weight: 5}]
                                 },
-                                createMarker: function() { return null; } // Don't create default markers
+                                createMarker: function() { return null; }
                             }).addTo(map);
-                            
+
                             // Fit map to show both points
                             map.fitBounds([userLocation, destination]);
                             
@@ -556,41 +637,90 @@
                             if (loadingElement) {
                                 loadingElement.style.display = 'none';
                             }
-                            
-                            // Set up navigate button
+
+                            // Navigate button opens in OpenStreetMap
                             document.getElementById('navigate-button').addEventListener('click', function() {
-                                // In a real app, you would use the actual destination coordinates
-                                window.open(`https://www.openstreetmap.org/directions?engine=osrm_car&route=${userLocation[0]}%2C${userLocation[1]}%3B${destination.lat}%2C${destination.lng}#map=15/${userLocation[0]}/${userLocation[1]}`, '_blank');
+                                window.open(
+                                    `https://www.openstreetmap.org/directions?engine=osrm_car&route=${userLocation[0]}%2C${userLocation[1]}%3B${destination.lat}%2C${destination.lng}#map=15/${userLocation[0]}/${userLocation[1]}`,
+                                    '_blank'
+                                );
                             });
+
+                            // Listen for real-time location updates if there's an order
+                            const orderId = @json($deliveries->first()->id ?? null);
+                            if (orderId) {
+                                Echo.channel(`rider.${orderId}`)
+                                    .listen('RiderLocationUpdated', (e) => {
+                                        console.log('Received RiderLocationUpdated event:', {
+                                            order_id: e.order_id,
+                                            latitude: e.latitude,
+                                            longitude: e.longitude,
+                                            timestamp: e.timestamp
+                                        });
+                                        
+                                        if (riderMarker && e.latitude && e.longitude) {
+                                            const newLocation = [e.latitude, e.longitude];
+                                            riderMarker.setLatLng(newLocation);
+                                            map.panTo(newLocation);
+                                            riderMarker.bindPopup(`Updated Location: ${e.latitude}, ${e.longitude}`).openPopup();
+
+                                            // Update the route
+                                            L.Routing.control({
+                                                waypoints: [
+                                                    L.latLng(e.latitude, e.longitude),
+                                                    destination
+                                                ],
+                                                routeWhileDragging: false,
+                                                show: false,
+                                                lineOptions: {
+                                                    styles: [{color: '#3B82F6', opacity: 0.7, weight: 5}]
+                                                },
+                                                createMarker: function() { return null; }
+                                            }).addTo(map);
+                                        }
+                                    });
+                            }
                         },
                         (error) => {
                             console.error('Geolocation error:', error);
-                            // If geolocation fails, use default location
                             handleLocationError(true, map, defaultLocation);
                             if (loadingElement) {
                                 loadingElement.style.display = 'none';
                             }
-                        }
+                        },
+                        { enableHighAccuracy: true, timeout: 10000 }
                     );
                 } else {
-                    // Browser doesn't support Geolocation
+                    console.error('Browser does not support geolocation');
                     handleLocationError(false, map, defaultLocation);
                     if (loadingElement) {
                         loadingElement.style.display = 'none';
                     }
                 }
             }
-            
+
             function handleLocationError(browserHasGeolocation, map, pos) {
-                // Show an error or just use the default position
-                map.setView(pos, 13);
+                console.error('Map initialization error:', { 
+                    browserHasGeolocation, 
+                    position: pos 
+                });
                 
+                map.setView(pos, 13);
                 L.marker(pos).addTo(map)
                     .bindPopup(browserHasGeolocation ?
                         "Error: The Geolocation service failed." :
                         "Error: Your browser doesn't support geolocation.")
                     .openPopup();
             }
+
+            // Clean up when page is unloaded
+            window.addEventListener('beforeunload', function() {
+                stopLocationUpdates();
+                if (localStorage.getItem('riderStatus') === 'online') {
+                    // Set status to offline if page is being closed
+                    updateRiderStatus(false);
+                }
+            });
         });
     </script>
 </body>

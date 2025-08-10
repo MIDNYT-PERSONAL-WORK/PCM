@@ -8,5 +8,5 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 });
 
 Broadcast::channel('order.tracking.{orderId}', function ($user, $orderId) {
-    return (int) $user->id === (int) Order::find($orderId)->user_id;
+    return true;
 });

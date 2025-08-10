@@ -151,6 +151,7 @@ protected function sendDeliveryNotification($phone, $message)
             $order->OrderItems()->create([
                 'product_id' => $draftItem->product_id,
                 'quantity' => $draftItem->quantity,
+                'vendor_id'=>$draftItem->product->vendor->id,
                 'price' => $draftItem->price,
                 'amount' => $draftItem->amount,
             ]);

@@ -1,12 +1,15 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Delivery Tracking - {{ $order->order_number }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Order Delivery Tracking - {{ $order->order_number }}</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         #tracking-map {
             height: 400px;
@@ -37,6 +40,23 @@
             height: 16px;
             border-radius: 50%;
             border: 2px solid white;
+        }
+        .connection-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            z-index: 1000;
+        }
+        .connected {
+            background-color: #10B981;
+            color: white;
+        }
+        .disconnected {
+            background-color: #EF4444;
+            color: white;
         }
     </style>
 </head>
@@ -88,6 +108,12 @@
                     <div>
                         <p class="font-medium">{{ $order->rider->name }}</p>
                         <p class="text-sm text-gray-600">{{ $order->rider->phone }}</p>
+                        <p class="text-sm mt-1">
+                            <span id="rider-status" class="px-2 py-1 rounded-full text-xs 
+                                {{ $order->rider->is_active === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
+                                {{ $order->rider->is_active === 'active' ? 'Online' : 'Offline' }}
+                            </span>
+                        </p>
                     </div>
                 </div>
             </div>
@@ -137,15 +163,18 @@
         </div>
     </div>
 
-    <!-- Leaflet JS -->
+    <!-- Connection status indicator -->
+    <div id="connection-status" class="connection-status disconnected">
+        Connecting to real-time updates...
+    </div>
+
+    <!-- Leaflet JS and Routing Machine -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <!-- Leaflet Routing Machine -->
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
     
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Default coordinates (Accra, Ghana)
-        
         const defaultLocation = [5.5600, -0.2057];
         const deliveryLocation = [
             {{ $order->delivery_latitude ?? 5.6037 }}, 
@@ -171,53 +200,180 @@
         }).addTo(map);
         destinationMarker.bindPopup("Delivery Location").openPopup();
 
+        // Variables to store map elements
+        let riderMarker = null;
+        let routingControl = null;
+        let watchId = null;
+
+        // Function to update rider position on the map
+        function updateRiderPosition(latitude, longitude) {
+            console.log('Updating rider position:', { latitude, longitude });
+            const newLocation = [latitude, longitude];
+            
+            if (!riderMarker) {
+                // Create rider marker if it doesn't exist
+                riderMarker = L.marker(newLocation, {
+                    icon: L.divIcon({
+                        className: 'rider-marker',
+                        html: '',
+                        iconSize: [20, 20],
+                        iconAnchor: [10, 10]
+                    })
+                }).addTo(map);
+                riderMarker.bindPopup("Rider Location");
+                
+                // Add routing between rider and destination
+                if (routingControl) {
+                    map.removeControl(routingControl);
+                }
+                
+                routingControl = L.Routing.control({
+                    waypoints: [
+                        L.latLng(newLocation[0], newLocation[1]),
+                        L.latLng(deliveryLocation[0], deliveryLocation[1])
+                    ],
+                    routeWhileDragging: false,
+                    show: false,
+                    lineOptions: {
+                        styles: [{color: '#3B82F6', opacity: 0.7, weight: 5}]
+                    },
+                    createMarker: function() { return null; }
+                }).addTo(map);
+                
+                // Fit map to show both locations
+                map.fitBounds([newLocation, deliveryLocation]);
+            } else {
+                // Update existing marker position
+                riderMarker.setLatLng(newLocation);
+                
+                // Update routing if it exists
+                if (routingControl) {
+                    routingControl.setWaypoints([
+                        L.latLng(newLocation[0], newLocation[1]),
+                        L.latLng(deliveryLocation[0], deliveryLocation[1])
+                    ]);
+                }
+            }
+            
+            // Hide loading spinner
+            document.getElementById('map-loading').style.display = 'none';
+        }
+
+        // Function to handle connection status updates
+        function updateConnectionStatus(connected) {
+            const statusElement = document.getElementById('connection-status');
+            statusElement.textContent = connected ? 
+                '✅ Connected to real-time updates' : 
+                '❌ Disconnected from real-time updates';
+            statusElement.className = connected ? 
+                'connection-status connected' : 
+                'connection-status disconnected';
+        }
+
+        // Function to handle rider status updates
+        function updateRiderStatus(online) {
+            const statusElement = document.getElementById('rider-status');
+            if (statusElement) {
+                statusElement.textContent = online ? 'Online' : 'Offline';
+                statusElement.className = online ? 
+                    'px-2 py-1 rounded-full text-xs bg-green-100 text-green-800' : 
+                    'px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800';
+            }
+        }
+
+        // Verify Echo is defined
+        if (typeof Echo === 'undefined') {
+            console.error('Echo is not defined. Ensure Laravel Echo is properly loaded in app.js.');
+            updateConnectionStatus(false);
+            return;
+        }
+
+        // Subscribe to rider location updates with enhanced logging
+        const channel = Echo.channel(`order.tracking.{{ $order->id }}`);
+        
+        // Log when the channel is subscribed
+        channel.subscribed(() => {
+            console.log('Successfully subscribed to channel:', `order.tracking.{{ $order->id }}`);
+            updateConnectionStatus(true);
+        }).error((error) => {
+            console.error('Failed to subscribe to channel:', `order.tracking.{{ $order->id }}`, error);
+            updateConnectionStatus(false);
+        });
+
+        // Log all events received on the channel
+        channel.listenForWhisper('any', (data) => {
+            console.log('Received whisper event on channel:', {
+                channel: `order.tracking.{{ $order->id }}`,
+                event: 'any',
+                payload: data
+            });
+        });
+
+        // Listen for LocationUpdated event
+        channel.listen('.LocationUpdated', (data) => {
+            console.log('Received rider location update event:', {
+                eventName: 'LocationUpdated',
+                channel: `order.tracking.{{ $order->id }}`,
+                latitude: data.latitude,
+                longitude: data.longitude,
+                payload: data,
+                timestamp: new Date().toISOString()
+            });
+            updateRiderPosition(data.latitude, data.longitude);
+            updateRiderStatus(true);
+        });
+
+        // Check if the context is secure and log the current URL for debugging
+        const isSecureContext = window.isSecureContext || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        console.log('Current URL:', window.location.href, 'Is secure context?', isSecureContext);
+        
+        // Verify geolocation API availability
+        console.log('Geolocation API available:', !!navigator.geolocation);
+        
         // Try to get the user's current location
-        if (navigator.geolocation) {
+        if (navigator.geolocation && isSecureContext) {
+            console.log('Attempting to request geolocation...');
             navigator.geolocation.getCurrentPosition(
-                function(position) {
+                (position) => {
                     const userLocation = [position.coords.latitude, position.coords.longitude];
+                    console.log('Initial user location:', {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        accuracy: position.coords.accuracy
+                    });
+                    updateRiderPosition(position.coords.latitude, position.coords.longitude);
                     
-                    // Add rider marker
-                    const riderMarker = L.marker(userLocation, {
-                        icon: L.divIcon({
-                            className: 'rider-marker',
-                            html: '',
-                            iconSize: [20, 20],
-                            iconAnchor: [10, 10]
-                        })
-                    }).addTo(map);
-                    riderMarker.bindPopup("Your Location");
-
-                    // Add routing between user and destination
-                    L.Routing.control({
-                        waypoints: [
-                            L.latLng(userLocation[0], userLocation[1]),
-                            L.latLng(deliveryLocation[0], deliveryLocation[1])
-                        ],
-                        routeWhileDragging: false,
-                        show: false,
-                        lineOptions: {
-                            styles: [{color: '#3B82F6', opacity: 0.7, weight: 5}]
+                    // Watch for position changes
+                    watchId = navigator.geolocation.watchPosition(
+                        (position) => {
+                            const newLocation = [position.coords.latitude, position.coords.longitude];
+                            console.log('User location updated:', {
+                                latitude: position.coords.latitude,
+                                longitude: position.coords.longitude,
+                                accuracy: position.coords.accuracy
+                            });
+                            updateRiderPosition(position.coords.latitude, position.coords.longitude);
                         },
-                        createMarker: function() { return null; }
-                    }).addTo(map);
-
-                    // Fit map to show both locations
-                    map.fitBounds([userLocation, deliveryLocation]);
-                    
-                    // Hide loading spinner
-                    document.getElementById('map-loading').style.display = 'none';
+                        (error) => {
+                            console.error('Geolocation error:', {
+                                code: error.code,
+                                message: error.message
+                            });
+                            handleGeolocationError(error);
+                        },
+                        {
+                            enableHighAccuracy: true,
+                            maximumAge: 30000,
+                            timeout: 10000
+                        }
+                    );
                 },
-                function(error) {
-                    console.error('Geolocation error:', error);
-                    // If geolocation fails, just show the destination
-                    map.setView(deliveryLocation, 15);
-                    document.getElementById('map-loading').style.display = 'none';
-                    
-                    // Show error message
-                    L.marker(deliveryLocation).addTo(map)
-                        .bindPopup("Could not get your location. Showing delivery location only.")
-                        .openPopup();
+                (error) => {
+                    console.error('Geolocation error:', {
+                        code: error.code,
+                        message: error.message
+                    });
+                    handleGeolocationError(error);
                 },
                 {
                     enableHighAccuracy: true,
@@ -225,22 +381,49 @@
                 }
             );
         } else {
-            // Browser doesn't support Geolocation
+            // Handle non-secure context or geolocation not supported
+            console.error('Geolocation not available:', !navigator.geolocation ? 'Browser does not support geolocation' : 'Non-secure context');
+            handleGeolocationError({
+                code: !navigator.geolocation ? 0 : 1,
+                message: !navigator.geolocation ? 'Browser does not support geolocation' : 'Geolocation requires a secure context (HTTPS or localhost)'
+            });
+        }
+
+        // Function to handle geolocation errors
+        function handleGeolocationError(error) {
+            let errorMessage;
+            switch (error.code) {
+                case 1: // PERMISSION_DENIED
+                    errorMessage = 'Location access denied. Please allow location access to track the rider.';
+                    break;
+                case 2: // POSITION_UNAVAILABLE
+                    errorMessage = 'Location information is unavailable. Showing delivery location only.';
+                    break;
+                case 3: // TIMEOUT
+                    errorMessage = 'Location request timed out. Showing delivery location only.';
+                    break;
+                default: // Includes non-secure context
+                    errorMessage = error.message.includes('secure') 
+                        ? 'Geolocation requires a secure connection (HTTPS or localhost). Showing delivery location only.'
+                        : 'Unable to access location. Showing delivery location only.';
+            }
+
+            console.log('Geolocation error message displayed:', errorMessage);
             map.setView(deliveryLocation, 15);
             document.getElementById('map-loading').style.display = 'none';
             
             L.marker(deliveryLocation).addTo(map)
-                .bindPopup("Your browser doesn't support geolocation. Showing delivery location.")
+                .bindPopup(errorMessage)
                 .openPopup();
         }
-    });
-    // Add this to your customer's tracking page JavaScript
-    Echo.connector.socket.on('connect', () => {
-        console.log('✅ Connected to WebSocket server');
-    });
 
-    Echo.connector.socket.on('disconnect', () => {
-        console.log('❌ Disconnected from WebSocket server');
+        // Clean up on page unload
+        window.addEventListener('beforeunload', () => {
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+            }
+            Echo.leave(`order.tracking.{{ $order->id }}`);
+        });
     });
     </script>
 </body>
