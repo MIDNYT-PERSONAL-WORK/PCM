@@ -16,13 +16,19 @@ class OrderController extends Controller
     //index operatir page
 
     public function index(){
-       
-        return view('operator.dashboard');
+        $PendingDispatch=Order::where('status','pending')->get();
+        $Deliveries=Order::where('status','delivered')->where('operator_id', auth()->id())->get();
+        $ActiveRider=User::where('role','rider')->where('is_active','active')->get();
+        $orders = Order::with('rider')->orderBy('created_at', 'desc')->take(4)->get();
+
+        return view('operator.dashboard', compact('PendingDispatch', 'Deliveries', 'ActiveRider', 'orders'));
     }
 
     public function assignRider(DraftOrder $draft){
         $riderId = request('rider_id'); // Assuming rider_id is passed in the request
         $draft->update(['rider_id' => $riderId]);
+        //change rider is_active 
+        User::where('id', $riderId)->update(['is_active' => 'on_delivery']);
 
         // Additional logic for assigning rider if needed
 
@@ -270,11 +276,33 @@ protected function sendDeliveryNotification($phone, $message)
         return view('operator.dispatch', compact('drafts'));
     }
 
-    public function OperatorRiders()
-    {
-        $riders = User::where('role', 'rider')->orderBy('name')->get();
-        return view('operator.riders', compact('riders'));
+    public function OperatorRiders(Request $request)
+{
+    $query = User::where('role', 'rider')->orderBy('name');
+    
+    // Search functionality
+    if ($request->has('search')) {
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            $q->where('name', 'like', "%$search%")
+              ->orWhere('phone', 'like', "%$search%")
+              ->orWhere('email', 'like', "%$search%");
+        });
     }
+    
+    // Status filter
+    if ($request->has('status') && $request->status != '') {
+        $query->where('is_active', $request->status);
+    }
+    
+    $riders = $query->paginate(10);
+    
+    // Counts for stats cards
+    $activeRiders = User::where('role', 'rider')->where('is_active', 'active')->count();
+    $onDelivery = User::where('role', 'rider')->where('is_active', 'on_delivery')->count();
+    
+    return view('operator.riders', compact('riders', 'activeRiders', 'onDelivery'));
+}
 
     public function OperatorPayments()
     {

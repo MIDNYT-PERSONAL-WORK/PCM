@@ -19,7 +19,7 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->enum('role', ['admin', 'vendor', 'operator', 'rider','Unassigned']);
-            $table->enum('is_active', ['unassigned', 'pending', 'active', 'inactive']);
+            $table->enum('is_active', ['unassigned', 'pending', 'active', 'inactive','on_leave','on_delivery']);
             $table->rememberToken();
             $table->timestamps();
         });

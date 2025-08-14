@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\RiderController;
 use App\Http\Controllers\RolesController;
@@ -89,7 +90,7 @@ Route::put('/orders/{order}/confirm', [OrderController::class, 'confirmOrder'])-
 Route::get('operator/draft', [OrderController::class, 'draft'])->name('operator.draft');
 Route::get('operator/order', [OrderController::class, 'order'])->name('operator.order');
 Route::get('/operator/dashboard', [OrderController::class, 'index'])->name('operator.dashboard');
-Route::get('operator/dispatch', [OrderController::class, 'dispatch'])->name('operator.dispatch');
+// Route::get('operator/dispatch', [OrderController::class, 'dispatch'])->name('operator.dispatch');
 Route::get('operator/Riders', [OrderController::class, 'OperatorRiders'])->name('operator.Riders');
 Route::get('operator/Payments', [OrderController::class, 'OperatorPayments'])->name('operator.payments');
 
@@ -135,7 +136,7 @@ Route::get('/orders/{order}', [OrderController::class, 'show'])->name('vendor.or
 Route::get('vendor/orders', [VendorController::class, 'VendorOrder'])->name('vendor.orders');
 Route::get('vendor/products', [VendorController::class, 'product'])->name('vendor.products');
 Route::view('vendor/payments', 'vendors.payment')->name('vendor.payments');
-Route::view('operator/dashboard', 'operator.dashboard')->name('operator.dashboard');
+// Route::view('operator/dashboard', 'operator.dashboard')->name('operator.dashboard');
 
 Route::view('auth/document', 'auth.document')->name('auth.document');
 
@@ -158,7 +159,7 @@ Route::get('admin/roles', [RolesController::class, 'RolePage'])->name('admin.rol
         Route::view('admin/orders', 'admin.order')->name('admin.order');
         // Route::view('admin/roles', 'admin.role')->name('admin.role');
         Route::get('admin/inventory', [InventoryController::class, 'index'])->name('admin.inventory');
-        Route::view('admin/dashboard', 'admin.dashboard')->name('admin.dashboard');
+        Route::get('admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
        
         Route::get('admin/vendors', [VendorController::class,'index'])->name('admin.vendor');
         Route::prefix('admin/vendors')->group(function() {

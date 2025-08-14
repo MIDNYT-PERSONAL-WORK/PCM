@@ -60,7 +60,7 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm font-medium text-pam-gray">Total Orders</p>
-                                <p class="text-2xl font-semibold text-pam-blue">1,248</p>
+                                <p class="text-2xl font-semibold text-pam-blue">{{$TotalOrder}}</p>
                                 <p class="text-xs text-pam-green flex items-center">
                                     <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
@@ -80,7 +80,7 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm font-medium text-pam-gray">Active Vendors</p>
-                                <p class="text-2xl font-semibold text-pam-blue">84</p>
+                                <p class="text-2xl font-semibold text-pam-blue">{{$TotalVendor}}</p>
                                 <p class="text-xs text-pam-green flex items-center">
                                     <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
@@ -100,7 +100,7 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm font-medium text-pam-gray">Riders Online</p>
-                                <p class="text-2xl font-semibold text-pam-blue">36</p>
+                                <p class="text-2xl font-semibold text-pam-blue">{{$TotalRider}}</p>
                                 <p class="text-xs text-pam-gray">Out of 52 total</p>
                             </div>
                             <div class="p-3 rounded-lg bg-pam-blue/10 text-pam-blue">
